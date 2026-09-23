@@ -1,0 +1,10 @@
+{
+    "model_name": "CKD Prediction Model",
+    "version": "1.0.0",
+    "algorithm": "Random Forest Classifier",
+    "number_of_features": 24,
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1_score": 1.0
+}
