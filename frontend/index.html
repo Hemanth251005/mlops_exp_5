@@ -1,0 +1,499 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKD Prediction System</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f1f5f9;
+            color: #1e293b;
+            padding: 30px 15px;
+        }
+
+        .container {
+            max-width: 1050px;
+            margin: auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            color: #0f766e;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #64748b;
+        }
+
+        .form-card, .result-card {
+            background: white;
+            padding: 28px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            color: #0f766e;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            margin: 25px 0 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            font-size: 15px;
+            background: white;
+        }
+
+        input:focus, select:focus {
+            outline: 2px solid #5eead4;
+            border-color: #0f766e;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            margin-top: 30px;
+            background: #0f766e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .submit-btn:hover {
+            background: #115e59;
+        }
+
+        .submit-btn:disabled {
+            background: #94a3b8;
+            cursor: wait;
+        }
+
+        .result-card {
+            display: none;
+            text-align: center;
+        }
+
+        .prediction {
+            font-size: 30px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .probabilities {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .probability-box {
+            background: #f1f5f9;
+            padding: 18px;
+            border-radius: 9px;
+        }
+
+        .probability-box h3 {
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+
+        .probability-box p {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0f766e;
+        }
+
+        .note {
+            margin-top: 20px;
+            color: #b45309;
+            font-size: 13px;
+        }
+
+        .error {
+            color: #dc2626;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 13px;
+            margin-top: 25px;
+        }
+
+        @media (max-width: 700px) {
+            .form-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 450px) {
+            .form-grid, .probabilities {
+                grid-template-columns: 1fr;
+            }
+
+            .form-card {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+        <h1>CKD Prediction System</h1>
+        <p>Machine Learning Based Chronic Kidney Disease Prediction</p>
+    </header>
+
+    <div class="form-card">
+
+        <h2>Patient Information</h2>
+
+        <form id="predictionForm">
+
+            <h3 class="section-title">Numerical Parameters</h3>
+
+            <div class="form-grid">
+
+                <div class="field">
+                    <label>Age</label>
+                    <input type="number" name="age" value="48" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label>Blood Pressure (bp)</label>
+                    <input type="number" name="bp" value="80" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label>Specific Gravity (sg)</label>
+                    <input type="number" name="sg" value="1.02" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label>Albumin (al)</label>
+                    <input type="number" name="al" value="1" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label>Sugar (su)</label>
+                    <input type="number" name="su" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label>Blood Glucose (bgr)</label>
+                    <input type="number" name="bgr" value="121" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label>Blood Urea (bu)</label>
+                    <input type="number" name="bu" value="36" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label>Serum Creatinine (sc)</label>
+                    <input type="number" name="sc" value="1.2" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label>Sodium (sod)</label>
+                    <input type="number" name="sod" value="138" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label>Potassium (pot)</label>
+                    <input type="number" name="pot" value="4.4" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label>Hemoglobin (hemo)</label>
+                    <input type="number" name="hemo" value="15.4" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label>Packed Cell Volume (pcv)</label>
+                    <input type="number" name="pcv" value="44" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label>White Blood Cell Count (wc)</label>
+                    <input type="number" name="wc" value="7800" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label>Red Blood Cell Count (rc)</label>
+                    <input type="number" name="rc" value="5.2" step="any" required>
+                </div>
+
+            </div>
+
+            <h3 class="section-title">Categorical Parameters</h3>
+
+            <div class="form-grid">
+
+                <div class="field">
+                    <label>Red Blood Cells (rbc)</label>
+                    <select name="rbc">
+                        <option value="normal">Normal</option>
+                        <option value="abnormal">Abnormal</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Pus Cell (pc)</label>
+                    <select name="pc">
+                        <option value="normal">Normal</option>
+                        <option value="abnormal">Abnormal</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Pus Cell Clumps (pcc)</label>
+                    <select name="pcc">
+                        <option value="notpresent">Not Present</option>
+                        <option value="present">Present</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Bacteria (ba)</label>
+                    <select name="ba">
+                        <option value="notpresent">Not Present</option>
+                        <option value="present">Present</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Hypertension (htn)</label>
+                    <select name="htn">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Diabetes Mellitus (dm)</label>
+                    <select name="dm">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Coronary Artery Disease (cad)</label>
+                    <select name="cad">
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Appetite (appet)</label>
+                    <select name="appet">
+                        <option value="good">Good</option>
+                        <option value="poor">Poor</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Pedal Edema (pe)</label>
+                    <select name="pe">
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Anemia (ane)</label>
+                    <select name="ane">
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <button type="submit" class="submit-btn" id="predictButton">
+                Predict CKD
+            </button>
+
+            <p id="errorMessage" class="error"></p>
+
+        </form>
+    </div>
+
+    <div class="result-card" id="resultCard">
+
+        <h2>Prediction Result</h2>
+
+        <p>Model Prediction</p>
+        <div class="prediction" id="predictionText"></div>
+
+        <div class="probabilities">
+
+            <div class="probability-box">
+                <h3>CKD Probability</h3>
+                <p id="ckdProbability"></p>
+            </div>
+
+            <div class="probability-box">
+                <h3>Not CKD Probability</h3>
+                <p id="notCkdProbability"></p>
+            </div>
+
+        </div>
+
+        <p class="note" id="modelNote"></p>
+        <p id="modelVersion"></p>
+
+    </div>
+
+    <footer>
+        CKD Prediction System | Machine Learning & MLOps Project
+    </footer>
+
+</div>
+
+<script>
+
+    const API_URL = "https://mlops-exp-5-fcz7.onrender.com/predict";
+
+    const numericFields = [
+        "age", "bp", "sg", "al", "su",
+        "bgr", "bu", "sc", "sod", "pot",
+        "hemo", "pcv", "wc", "rc"
+    ];
+
+    document.getElementById("predictionForm")
+        .addEventListener("submit", async function(event) {
+
+        event.preventDefault();
+
+        const form = event.target;
+        const formData = new FormData(form);
+
+        const data = {};
+
+        for (const [key, value] of formData.entries()) {
+            data[key] = numericFields.includes(key)
+                ? Number(value)
+                : value;
+        }
+
+        const button = document.getElementById("predictButton");
+        const error = document.getElementById("errorMessage");
+        const resultCard = document.getElementById("resultCard");
+
+        button.disabled = true;
+        button.textContent = "Predicting...";
+        error.textContent = "";
+        resultCard.style.display = "none";
+
+        try {
+
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.detail
+                        ? JSON.stringify(result.detail)
+                        : "API request failed."
+                );
+            }
+
+            document.getElementById("predictionText").textContent =
+                result.prediction;
+
+            document.getElementById("predictionText").style.color =
+                result.prediction === "CKD" ? "#dc2626" : "#0f766e";
+
+            document.getElementById("ckdProbability").textContent =
+                (result.ckd_probability * 100).toFixed(2) + "%";
+
+            document.getElementById("notCkdProbability").textContent =
+                (result.not_ckd_probability * 100).toFixed(2) + "%";
+
+            document.getElementById("modelNote").textContent =
+                result.note;
+
+            document.getElementById("modelVersion").textContent =
+                "Model Version: " + result.model_version;
+
+            resultCard.style.display = "block";
+
+            resultCard.scrollIntoView({
+                behavior: "smooth"
+            });
+
+        } catch (err) {
+
+            error.textContent =
+                "Error: " + err.message +
+                " Please check the API connection and try again.";
+
+        } finally {
+
+            button.disabled = false;
+            button.textContent = "Predict CKD";
+
+        }
+
+    });
+
+</script>
+
+</body>
+</html>

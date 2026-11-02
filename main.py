@@ -1,3 +1,4 @@
+
 from pathlib import Path
 from time import perf_counter
 from typing import Literal
@@ -7,6 +8,7 @@ import joblib
 import pandas as pd
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
@@ -58,7 +60,23 @@ app = FastAPI(
 
 
 # ============================================================
-# 4. API METRICS
+# 4. CORS CONFIGURATION
+# ============================================================
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5500",
+        "http://127.0.0.1:5500"
+    ],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# ============================================================
+# 5. API METRICS
 # ============================================================
 
 total_requests = 0
@@ -68,7 +86,7 @@ total_response_time = 0.0
 
 
 # ============================================================
-# 5. REQUEST MONITORING MIDDLEWARE
+# 6. REQUEST MONITORING MIDDLEWARE
 # ============================================================
 
 @app.middleware("http")
@@ -94,7 +112,6 @@ async def metrics_middleware(request: Request, call_next):
     except Exception:
 
         failed_requests += 1
-
         raise
 
     finally:
@@ -105,7 +122,7 @@ async def metrics_middleware(request: Request, call_next):
 
 
 # ============================================================
-# 6. INPUT DATA VALIDATION
+# 7. INPUT DATA VALIDATION
 # ============================================================
 
 class PatientData(BaseModel):
@@ -113,65 +130,42 @@ class PatientData(BaseModel):
     # Numerical features
 
     age: float = Field(..., ge=0, le=120)
-
     bp: float = Field(..., ge=0, le=250)
-
     sg: float = Field(..., ge=1.0, le=1.1)
-
     al: float = Field(..., ge=0, le=5)
-
     su: float = Field(..., ge=0, le=5)
-
 
     # Categorical features
 
     rbc: Literal["normal", "abnormal"]
-
     pc: Literal["normal", "abnormal"]
-
     pcc: Literal["present", "notpresent"]
-
     ba: Literal["present", "notpresent"]
-
 
     # Numerical features
 
     bgr: float = Field(..., ge=0)
-
     bu: float = Field(..., ge=0)
-
     sc: float = Field(..., ge=0)
-
     sod: float = Field(..., ge=0)
-
     pot: float = Field(..., ge=0)
-
     hemo: float = Field(..., ge=0)
-
     pcv: float = Field(..., ge=0, le=100)
-
     wc: float = Field(..., ge=0)
-
     rc: float = Field(..., ge=0)
-
 
     # Categorical features
 
     htn: Literal["yes", "no"]
-
     dm: Literal["yes", "no"]
-
     cad: Literal["yes", "no"]
-
     appet: Literal["good", "poor"]
-
     pe: Literal["yes", "no"]
-
     ane: Literal["yes", "no"]
 
 
 # ============================================================
-# 7. GET /
+# 8. GET /
 # ============================================================
 
 @app.get("/")
@@ -187,7 +181,7 @@ def root():
 
 
 # ============================================================
-# 8. GET /health
+# 9. GET /health
 # ============================================================
 
 @app.get("/health")
@@ -199,7 +193,7 @@ def health():
 
 
 # ============================================================
-# 9. GET /ready
+# 10. GET /ready
 # ============================================================
 
 @app.get("/ready")
@@ -222,7 +216,7 @@ def ready():
 
 
 # ============================================================
-# 10. GET /model-info
+# 11. GET /model-info
 # ============================================================
 
 @app.get("/model-info")
@@ -232,15 +226,13 @@ def model_information():
 
 
 # ============================================================
-# 11. POST /predict
+# 12. POST /predict
 # ============================================================
 
 @app.post("/predict")
 def predict(patient: PatientData):
 
     global successful_predictions
-
-    # Check whether model is available
 
     if not model_loaded:
 
@@ -251,20 +243,15 @@ def predict(patient: PatientData):
             }
         )
 
-
     try:
 
         # Convert Pydantic object into dictionary
 
         patient_data = patient.model_dump()
 
-
         # Convert dictionary into DataFrame
 
-        input_df = pd.DataFrame(
-            [patient_data]
-        )
-
+        input_df = pd.DataFrame([patient_data])
 
         # Generate prediction
 
@@ -272,74 +259,50 @@ def predict(patient: PatientData):
             model.predict(input_df)[0]
         )
 
-
         # Generate probabilities
 
-        probabilities = model.predict_proba(
-            input_df
-        )[0]
-
+        probabilities = model.predict_proba(input_df)[0]
 
         # Probability for each class
 
-        not_ckd_probability = float(
-            probabilities[0]
-        )
+        not_ckd_probability = float(probabilities[0])
+        ckd_probability = float(probabilities[1])
 
-        ckd_probability = float(
-            probabilities[1]
-        )
-
-
-        # Convert numerical prediction
-        # into human-readable result
+        # Convert numerical prediction into result
 
         if prediction == 1:
 
             result = "CKD"
-
-            predicted_probability = (
-                ckd_probability
-            )
+            predicted_probability = ckd_probability
 
         else:
 
             result = "Not CKD"
-
-            predicted_probability = (
-                not_ckd_probability
-            )
-
+            predicted_probability = not_ckd_probability
 
         # Update successful prediction count
 
         successful_predictions += 1
 
-
         # Return API response
 
         return {
-
             "prediction": result,
 
             "model_output_probability": round(
-                predicted_probability,
-                4
+                predicted_probability, 4
             ),
 
             "ckd_probability": round(
-                ckd_probability,
-                4
+                ckd_probability, 4
             ),
 
             "not_ckd_probability": round(
-                not_ckd_probability,
-                4
+                not_ckd_probability, 4
             ),
 
             "model_version": model_info.get(
-                "version",
-                "unknown"
+                "version", "unknown"
             ),
 
             "note": (
@@ -347,7 +310,6 @@ def predict(patient: PatientData):
                 "not a medical diagnosis."
             )
         }
-
 
     except Exception as e:
 
@@ -361,7 +323,7 @@ def predict(patient: PatientData):
 
 
 # ============================================================
-# 12. GET /metrics
+# 13. GET /metrics
 # ============================================================
 
 @app.get("/metrics")
@@ -369,28 +331,20 @@ def metrics():
 
     average_response_time_ms = 0
 
-
     if total_requests > 0:
 
         average_response_time_ms = (
-            total_response_time /
-            total_requests
+            total_response_time / total_requests
         ) * 1000
 
-
     return {
-
         "total_requests": total_requests,
 
-        "successful_predictions":
-            successful_predictions,
+        "successful_predictions": successful_predictions,
 
-        "failed_requests":
-            failed_requests,
+        "failed_requests": failed_requests,
 
-        "average_response_time_ms":
-            round(
-                average_response_time_ms,
-                2
-            )
+        "average_response_time_ms": round(
+            average_response_time_ms, 2
+        )
     }
